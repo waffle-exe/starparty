@@ -346,7 +346,7 @@
                                     <input type="number" id="team-size" value="1" min="1" max="10" class="bg-transparent text-center text-white text-2xl font-bold w-16 border-none focus:ring-0 font-mono" readonly>
                                     <button type="button" onclick="adjustTeam(1)" class="w-10 h-10 rounded-lg bg-white/10 text-white hover:bg-yellow-500 hover:text-black transition flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
                                 </div>
-                                <p class="text-xs text-gray-400 mt-2 text-center">₹100 Base + ₹50 per extra member</p>
+                                <p class="text-xs text-gray-400 mt-2 text-center">₹30 Base + ₹30 per extra member</p>
                             </div>
 
                             <h4 class="subtitle-font font-bold text-gray-300 uppercase tracking-widest mb-4 text-sm">Category (Select one)</h4>
@@ -539,10 +539,10 @@
 
         function calcPerformerTotal() {
             if (window.currentType === 'attendee') return;
-            // Base price 100 + 50 per additional member
-            let price = 100;
+            // Base price 30 + 30 per additional member
+            let price = 30;
             if (window.teamCount > 1) {
-                price = 100 + (window.teamCount - 1) * 50;
+                price = 30 + (window.teamCount - 1) * 30;
             }
             updatePriceDisplay(price);
         }
