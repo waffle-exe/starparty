@@ -17,6 +17,7 @@
             --gold-glow: rgba(255, 215, 0, 0.6);
             --blue-glow: rgba(58, 123, 213, 0.6);
             --upvote-green: #2ecc71;
+            --remove-red: #e74c3c;
         }
 
         * {
@@ -157,15 +158,24 @@
             cursor: pointer; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
             transition: all 0.3s; flex-shrink: 0;
             text-transform: uppercase;
+            width: 140px; /* Fixed width to prevent jumping when text changes */
         }
-        button:hover:not(:disabled) { 
+        button:hover { 
             box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); transform: scale(1.05); 
             background: rgba(255, 215, 0, 0.1);
         }
-        button:disabled { 
+
+        /* State when user HAS voted */
+        button.voted { 
             background: rgba(46, 204, 113, 0.2); color: var(--upvote-green);
-            cursor: not-allowed; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); 
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); 
             border: 2px solid var(--upvote-green);
+        }
+        
+        /* Hover state to indicate removal of vote */
+        button.voted:hover {
+            background: rgba(231, 76, 60, 0.2); color: var(--remove-red);
+            border-color: var(--remove-red); box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
         }
 
         .hidden { display: none !important; }
@@ -206,7 +216,7 @@
 
         let candidatesData = [];
         
-        // Changed to an object to track multiple votes: { "candidate1_id": true, "candidate2_id": true }
+        // Track multiple votes
         let upvotedCandidates = JSON.parse(localStorage.getItem('upvotedCandidates')) || {};
 
         const title = document.getElementById('mainTitle');
@@ -253,7 +263,6 @@
                 boardContainer.classList.add('hidden');
                 boardContainer.innerHTML = '';
                 
-                // Reset local storage when poll stops so they can vote again next time
                 localStorage.removeItem('upvotedCandidates'); 
                 upvotedCandidates = {};
             }
@@ -288,23 +297,38 @@
                     </div>
                 `;
 
-                // Create the button dynamically so we can attach the event listener easily
+                // Create the button dynamically
                 const btn = document.createElement('button');
-                btn.innerText = isUpvoted ? '✓ UPVOTED' : '▲ UPVOTE';
-                btn.disabled = isUpvoted;
+                
+                // Set initial class and text based on vote state
+                if (isUpvoted) {
+                    btn.className = 'voted';
+                    btn.innerText = '✓ UPVOTED';
+                    // Hover effect to show "REMOVE"
+                    btn.onmouseover = () => btn.innerText = '✖ REMOVE';
+                    btn.onmouseout = () => btn.innerText = '✓ UPVOTED';
+                } else {
+                    btn.innerText = '▲ UPVOTE';
+                }
                 
                 btn.onclick = () => {
-                    if (upvotedCandidates[data.id]) return;
-                    
-                    // 1. Lock vote for THIS specific candidate locally
-                    upvotedCandidates[data.id] = true;
-                    localStorage.setItem('upvotedCandidates', JSON.stringify(upvotedCandidates));
-
-                    // 2. Send upvote to Firebase
                     const voteRef = ref(db, `candidates/${data.id}/votes`);
-                    runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
 
-                    // 3. UI will automatically update via the onValue Firebase listener!
+                    if (upvotedCandidates[data.id]) {
+                        // 1. REMOVE VOTE LOGIC
+                        delete upvotedCandidates[data.id];
+                        localStorage.setItem('upvotedCandidates', JSON.stringify(upvotedCandidates));
+                        
+                        // Transaction to safely subtract 1 (preventing negative numbers just in case)
+                        runTransaction(voteRef, (currentVotes) => Math.max(0, (currentVotes || 0) - 1));
+                    } else {
+                        // 2. ADD VOTE LOGIC
+                        upvotedCandidates[data.id] = true;
+                        localStorage.setItem('upvotedCandidates', JSON.stringify(upvotedCandidates));
+                        
+                        // Transaction to safely add 1
+                        runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
+                    }
                 };
 
                 // Append button to the header row
