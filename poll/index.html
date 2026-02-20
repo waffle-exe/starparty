@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Audience Poll - Live</title>
+    <!-- Google Fonts for a cinematic look -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Starry Night Color Palette */
+            --prussian-blue: #0A1128;
+            --cerulean: #1C3F60;
+            --light-blue: #3A7BD5;
+            --indian-yellow: #FFD700;
+            --zinc-white: #F0F4F8;
+            --gold-glow: rgba(255, 215, 0, 0.6);
+            --blue-glow: rgba(58, 123, 213, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--prussian-blue);
+            color: var(--zinc-white); 
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- STARRY NIGHT BACKGROUND EFFECTS --- */
+        .sky-container {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; overflow: hidden;
+            background: linear-gradient(rgba(10, 17, 40, 0.6), rgba(10, 17, 40, 0.8)), url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg/500px-Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg') no-repeat center center;
+            background-size: cover;
+        }
+
+        /* Fine background twinkling stars */
+        .stars-fine { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; }
+        .stars-fine::after { 
+            content: ""; position: absolute; top: 0; left: 0; width: 200%; height: 200%; 
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)), 
+                radial-gradient(1.5px 1.5px at 150px 100px, var(--indian-yellow), rgba(0,0,0,0)), 
+                radial-gradient(1px 1px at 80px 180px, #fff, rgba(0,0,0,0)), 
+                radial-gradient(2px 2px at 200px 60px, #fff, rgba(0,0,0,0)), 
+                radial-gradient(1px 1px at 250px 250px, var(--light-blue), rgba(0,0,0,0)); 
+            background-repeat: repeat; background-size: 300px 300px; 
+            animation: twinkle 5s infinite alternate; 
+        }
+
+        /* OTT Broadcast overlay (Vignette) */
+        .vignette {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.8);
+            pointer-events: none; z-index: 100;
+        }
+
+        @keyframes twinkle { 0% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* --- UI ELEMENTS --- */
+        .header-container {
+            width: 100%; max-width: 800px;
+            display: flex; flex-direction: column; align-items: center;
+            padding: 40px 20px 20px;
+            z-index: 10;
+        }
+
+        .live-badge {
+            background: rgba(255, 0, 0, 0.2); border: 1px solid #ff4e50; color: #ff4e50;
+            padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
+            letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+            animation: pulse-badge 2s infinite;
+        }
+        .live-dot { width: 8px; height: 8px; background: #ff4e50; border-radius: 50%; }
+        @keyframes pulse-badge { 0% { box-shadow: 0 0 10px rgba(255,0,0,0.2); } 50% { box-shadow: 0 0 20px rgba(255,0,0,0.6); } 100% { box-shadow: 0 0 10px rgba(255,0,0,0.2); } }
+
+        h1 { 
+            font-family: 'Cinzel', serif; font-size: 2.5rem; text-align: center; 
+            text-transform: uppercase; letter-spacing: 4px; 
+            text-shadow: 0 0 20px var(--gold-glow); 
+            margin-bottom: 10px; color: var(--indian-yellow);
+        }
+
+        #timer { 
+            font-family: 'Cinzel', serif; font-size: 4rem; font-weight: bold; 
+            color: var(--zinc-white); text-shadow: 0 0 30px var(--blue-glow); 
+            margin-bottom: 30px; display: none; 
+            background: rgba(0,0,0,0.3); padding: 10px 40px; border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        #pollContainer, #resultsContainer { 
+            width: 100%; max-width: 700px; padding: 0 20px; z-index: 10;
+        }
+        
+        /* Glassmorphism Cards */
+        .card { 
+            background: rgba(10, 17, 40, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 25px; border-radius: 16px; margin-bottom: 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid rgba(58, 123, 213, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative; overflow: hidden;
+            width: 100%;
+        }
+        .card::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
+            transform: skewX(-25deg); transition: 0.5s;
+        }
+        .card:hover { 
+            transform: translateY(-5px); 
+            border-color: var(--light-blue); 
+            box-shadow: 0 15px 40px rgba(58, 123, 213, 0.4);
+        }
+        .card:hover::before { left: 150%; }
+
+        .card h2 { font-size: 1.5rem; font-weight: 600; margin: 0; word-break: break-word; }
+        
+        /* Interactive Buttons */
+        button { 
+            padding: 12px 35px; 
+            background: linear-gradient(135deg, var(--indian-yellow) 0%, #F39C12 100%); 
+            color: #000; border: none; border-radius: 30px; 
+            font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 1px;
+            cursor: pointer; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s;
+            position: relative; overflow: hidden;
+            flex-shrink: 0;
+        }
+        button:hover:not(:disabled) { 
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); transform: scale(1.05); 
+            background: linear-gradient(135deg, #FFFDE4 0%, var(--indian-yellow) 100%);
+        }
+        button:disabled { 
+            background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5);
+            cursor: not-allowed; box-shadow: none; border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* --- THRILLING RESULTS ANIMATION --- */
+        .results-wrapper { display: flex; flex-direction: column; width: 100%; }
+        
+        .rank-card {
+            flex-direction: column; align-items: stretch; gap: 15px;
+            opacity: 0; transform: translateY(50px) scale(0.95);
+            animation: cinematicPopIn 0.8s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .rank-card .header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; }
+        
+        /* Gold styling for Winner */
+        .rank-1 { 
+            border-color: var(--indian-yellow); 
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); 
+            transform: scale(1.02); 
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(10,17,40,0.8));
+        }
+        .rank-1 h2.name { color: var(--indian-yellow); font-family: 'Cinzel', serif; font-size: 2rem; }
+        .rank-1 .vote-count { color: var(--indian-yellow); font-size: 2rem; }
+
+        .vote-count { font-size: 1.5rem; font-weight: bold; color: var(--light-blue); text-align: right; }
+
+        /* Progress Bar */
+        .progress-track {
+            width: 100%; height: 12px; background: rgba(255,255,255,0.1);
+            border-radius: 10px; overflow: hidden; position: relative;
+        }
+        .progress-fill {
+            height: 100%; width: 0%; border-radius: 10px;
+            background: linear-gradient(90deg, var(--light-blue), #00d2ff);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.8);
+            transition: width 2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s; /* Delay fill slightly */
+        }
+        .rank-1 .progress-fill {
+            background: linear-gradient(90deg, #F39C12, var(--indian-yellow));
+            box-shadow: 0 0 20px var(--gold-glow);
+        }
+
+        @keyframes cinematicPopIn { 
+            0% { opacity: 0; transform: translateY(40px) scale(0.95); filter: blur(10px); } 
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } 
+        }
+        
+        .hidden { display: none !important; }
+
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; letter-spacing: 2px; }
+            #timer { font-size: 3.5rem; padding: 10px 30px; }
+            .header-container { padding: 30px 15px 15px; }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.6rem; letter-spacing: 1px; }
+            #timer { font-size: 2.8rem; padding: 10px 20px; }
+            
+            /* Voting Cards */
+            .card { flex-direction: column; gap: 15px; text-align: center; padding: 20px 15px; }
+            .card h2 { font-size: 1.3rem; }
+            button { width: 100%; padding: 14px 20px; font-size: 1.1rem; }
+            
+            /* Results Cards */
+            .rank-card .header-row { flex-direction: column; justify-content: center; text-align: center; }
+            .vote-count { text-align: center; font-size: 1.3rem; }
+            .rank-1 h2.name { font-size: 1.6rem; }
+            .rank-1 .vote-count { font-size: 1.6rem; }
+        }
+
+        @media (max-width: 400px) {
+            h1 { font-size: 1.3rem; }
+            #timer { font-size: 2.2rem; margin-bottom: 20px; }
+            .live-badge { font-size: 0.7rem; padding: 4px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Abstract Starry Night Background -->
+    <div class="sky-container">
+        <div class="stars-fine"></div>
+    </div>
+    
+    <!-- OTT Overlay -->
+    <div class="vignette"></div>
+
+    <div class="header-container">
+        <div class="live-badge" id="liveBadge"><div class="live-dot"></div> <span id="badgeText">Connecting</span></div>
+        <h1 id="mainTitle">Waiting for Host...</h1>
+        <div id="timer">30.0</div>
+    </div>
+    
+    <div id="pollContainer"></div>
+    <div id="resultsContainer" class="hidden results-wrapper"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // User's provided Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCut-Qi7scoHnjHyE8UBuN53PHWnMMKqSE",
+            authDomain: "sitee-f6a0c.firebaseapp.com",
+            databaseURL: "https://sitee-f6a0c-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "sitee-f6a0c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let countdownInterval;
+        let candidatesData = [];
+        let hasVoted = localStorage.getItem('hasVoted') === 'true';
+
+        const title = document.getElementById('mainTitle');
+        const timerDisplay = document.getElementById('timer');
+        const pollContainer = document.getElementById('pollContainer');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const badgeText = document.getElementById('badgeText');
+        const liveBadge = document.getElementById('liveBadge');
+
+        // 1. Listen for Candidates
+        onValue(ref(db, 'candidates'), (snapshot) => {
+            candidatesData = [];
+            snapshot.forEach(child => {
+                candidatesData.push({ id: child.key, ...child.val() });
+            });
+            // Only re-render voting list if poll is active and results aren't showing
+            if (!resultsContainer.classList.contains('hidden')) return;
+            renderVotingList();
+        });
+
+        // 2. Listen for Timer/Poll Status
+        onValue(ref(db, 'pollStatus'), (snapshot) => {
+            const status = snapshot.val();
+            if (!status) return;
+
+            clearInterval(countdownInterval);
+
+            if (status.active) {
+                const timeLeft = status.endTime - Date.now();
+                
+                if (timeLeft > 0) {
+                    // Poll is actively running
+                    title.innerText = "Global Audience Vote";
+                    badgeText.innerText = "LIVE VOTE";
+                    liveBadge.style.color = "#ff4e50";
+                    liveBadge.style.borderColor = "#ff4e50";
+                    liveBadge.querySelector('.live-dot').style.background = "#ff4e50";
+                    
+                    timerDisplay.style.display = 'block';
+                    pollContainer.classList.remove('hidden');
+                    resultsContainer.classList.add('hidden');
+                    
+                    countdownInterval = setInterval(() => {
+                        const remaining = (status.endTime - Date.now()) / 1000;
+                        if (remaining <= 0) {
+                            clearInterval(countdownInterval);
+                            timerDisplay.innerText = "0.0";
+                            showThrillingResults();
+                        } else {
+                            timerDisplay.innerText = remaining.toFixed(1);
+                        }
+                    }, 100);
+                } else {
+                    // Poll finished previously
+                    showThrillingResults();
+                }
+            } else {
+                // Poll reset by admin
+                title.innerText = "Awaiting Next Category";
+                badgeText.innerText = "STANDBY";
+                liveBadge.style.color = "#F39C12";
+                liveBadge.style.borderColor = "#F39C12";
+                liveBadge.querySelector('.live-dot').style.background = "#F39C12";
+
+                timerDisplay.style.display = 'none';
+                pollContainer.innerHTML = '';
+                resultsContainer.classList.add('hidden');
+                localStorage.removeItem('hasVoted'); // Reset local voting lock
+                hasVoted = false;
+            }
+        });
+
+        function renderVotingList() {
+            pollContainer.innerHTML = '';
+            candidatesData.forEach((data, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                // Slight stagger for initial load
+                card.style.animation = `cinematicPopIn 0.5s ease forwards ${index * 0.1}s`;
+                card.style.opacity = "0";
+
+                card.innerHTML = `<h2 class="name">${data.name}</h2>`;
+                
+                const btn = document.createElement('button');
+                btn.innerText = hasVoted ? 'VOTE RECORDED' : 'CAST VOTE';
+                btn.disabled = hasVoted;
+                
+                btn.onclick = () => {
+                    if (hasVoted) return;
+                    
+                    // Mark as voted locally
+                    localStorage.setItem('hasVoted', 'true');
+                    hasVoted = true;
+                    renderVotingList(); // Update buttons immediately
+
+                    // Send to Firebase
+                    const voteRef = ref(db, `candidates/${data.id}/votes`);
+                    runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
+                };
+
+                card.appendChild(btn);
+                pollContainer.appendChild(card);
+            });
+        }
+
+        function showThrillingResults() {
+            title.innerText = "FINAL RESULTS";
+            badgeText.innerText = "RESULTS FINAL";
+            liveBadge.style.color = "var(--indian-yellow)";
+            liveBadge.style.borderColor = "var(--indian-yellow)";
+            liveBadge.querySelector('.live-dot').style.background = "var(--indian-yellow)";
+            
+            timerDisplay.style.display = 'none';
+            pollContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+
+            // Calculate Total Votes for percentages
+            const totalVotes = candidatesData.reduce((sum, current) => sum + (current.votes || 0), 0);
+            
+            // Sort by votes descending
+            const sorted = [...candidatesData].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+
+            sorted.forEach((data, index) => {
+                const card = document.createElement('div');
+                card.className = `card rank-card ${index === 0 ? 'rank-1' : ''}`;
+                
+                // Stagger the animation delay based on rank (lower rank appears first)
+                const delay = (sorted.length - 1 - index) * 0.8; 
+                card.style.animationDelay = `${delay}s`;
+
+                // Calculate percentage
+                const percentage = totalVotes > 0 ? (((data.votes || 0) / totalVotes) * 100).toFixed(1) : 0;
+
+                card.innerHTML = `
+                    <div class="header-row">
+                        <h2 class="name">#${index + 1} ${data.name}</h2>
+                        <span class="vote-count">${data.votes || 0} Votes</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: 0%" data-target="${percentage}%"></div>
+                    </div>
+                `;
+                resultsContainer.appendChild(card);
+
+                // Trigger the progress bar fill animation after the card has popped in
+                setTimeout(() => {
+                    const fillBar = card.querySelector('.progress-fill');
+                    if(fillBar) {
+                        fillBar.style.width = fillBar.getAttribute('data-target');
+                    }
+                }, (delay * 1000) + 100); // trigger slightly after card animation starts
+            });
+        }
+    </script>
+</body>
+</html>
