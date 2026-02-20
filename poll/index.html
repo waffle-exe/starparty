@@ -269,25 +269,27 @@
         const badgeText = document.getElementById('badgeText');
         const liveBadge = document.getElementById('liveBadge');
 
+        let isPollActive = false; // Add flag to safely block early rendering
+
         // 1. Listen for Candidates
         onValue(ref(db, 'candidates'), (snapshot) => {
             candidatesData = [];
             snapshot.forEach(child => {
                 candidatesData.push({ id: child.key, ...child.val() });
             });
-            // Only re-render voting list if poll is active and results aren't showing
-            if (!resultsContainer.classList.contains('hidden')) return;
+            // ONLY re-render if the poll is LIVE and results aren't showing yet
+            if (!isPollActive || !resultsContainer.classList.contains('hidden')) return;
             renderVotingList();
         });
 
         // 2. Listen for Timer/Poll Status
         onValue(ref(db, 'pollStatus'), (snapshot) => {
             const status = snapshot.val();
-            if (!status) return;
 
             clearInterval(countdownInterval);
 
-            if (status.active) {
+            if (status && status.active) {
+                isPollActive = true;
                 const timeLeft = status.endTime - Date.now();
                 
                 if (timeLeft > 0) {
@@ -301,6 +303,9 @@
                     timerDisplay.style.display = 'block';
                     pollContainer.classList.remove('hidden');
                     resultsContainer.classList.add('hidden');
+                    
+                    // Render the candidates immediately upon starting the poll
+                    renderVotingList();
                     
                     countdownInterval = setInterval(() => {
                         const remaining = (status.endTime - Date.now()) / 1000;
@@ -317,7 +322,8 @@
                     showThrillingResults();
                 }
             } else {
-                // Poll reset by admin
+                isPollActive = false; // Lock out candidate rendering
+                // Poll reset by admin or not started yet
                 title.innerText = "Awaiting Next Category";
                 badgeText.innerText = "STANDBY";
                 liveBadge.style.color = "#F39C12";
