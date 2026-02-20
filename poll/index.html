@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmic Audience Poll - Live</title>
+    <title>Cosmic Audience Poll - Live Upvotes</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     
     <style>
@@ -16,6 +16,7 @@
             --zinc-white: #F0F4F8;
             --gold-glow: rgba(255, 215, 0, 0.6);
             --blue-glow: rgba(58, 123, 213, 0.6);
+            --upvote-green: #2ecc71;
         }
 
         * {
@@ -42,7 +43,6 @@
             background-size: cover;
         }
 
-        /* Fine background twinkling stars */
         .stars-fine { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; }
         .stars-fine::after { 
             content: ""; position: absolute; top: 0; left: 0; width: 200%; height: 200%; 
@@ -56,7 +56,6 @@
             animation: twinkle 5s infinite alternate; 
         }
 
-        /* OTT Broadcast overlay (Vignette) */
         .vignette {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             box-shadow: inset 0 0 150px rgba(0,0,0,0.8);
@@ -91,134 +90,97 @@
             margin-bottom: 30px; color: var(--indian-yellow);
         }
 
-        #pollContainer, #resultsContainer { 
-            width: 100%; max-width: 700px; padding: 0 20px; z-index: 10;
+        #boardContainer { 
+            width: 100%; max-width: 700px; padding: 0 20px 40px; z-index: 10;
+            display: flex; flex-direction: column; gap: 15px;
         }
         
-        /* Glassmorphism Cards */
+        /* Glassmorphism Upvote Cards */
         .card { 
             background: rgba(10, 17, 40, 0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 25px; border-radius: 16px; margin-bottom: 20px; 
-            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 25px; border-radius: 16px; 
+            display: flex; flex-direction: column; gap: 15px;
             border: 1px solid rgba(58, 123, 213, 0.3);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative; overflow: hidden;
             width: 100%;
         }
-        .card::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(to right, transparent, rgba(255,255,255,0.05), transparent);
-            transform: skewX(-25deg); transition: 0.5s;
-        }
         .card:hover { 
-            transform: translateY(-5px); 
+            transform: translateY(-3px); 
             border-color: var(--light-blue); 
             box-shadow: 0 15px 40px rgba(58, 123, 213, 0.4);
         }
-        .card:hover::before { left: 150%; }
 
-        .card h2 { font-size: 1.5rem; font-weight: 600; margin: 0; word-break: break-word; }
-        
-        /* Interactive Buttons */
-        button { 
-            padding: 12px 35px; 
-            background: linear-gradient(135deg, var(--indian-yellow) 0%, #F39C12 100%); 
-            color: #000; border: none; border-radius: 30px; 
-            font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 1px;
-            cursor: pointer; box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-            transition: all 0.3s;
-            position: relative; overflow: hidden;
-            flex-shrink: 0;
-        }
-        button:hover:not(:disabled) { 
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); transform: scale(1.05); 
-            background: linear-gradient(135deg, #FFFDE4 0%, var(--indian-yellow) 100%);
-        }
-        button:disabled { 
-            background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5);
-            cursor: not-allowed; box-shadow: none; border: 1px solid rgba(255,255,255,0.2);
+        .header-row { 
+            display: flex; justify-content: space-between; align-items: center; width: 100%; 
         }
 
-        /* --- THRILLING RESULTS ANIMATION --- */
-        .results-wrapper { display: flex; flex-direction: column; width: 100%; }
-        
-        .rank-card {
-            flex-direction: column; align-items: stretch; gap: 15px;
-            animation: fadeIn 0.4s forwards ease-in-out;
+        .info-col {
+            display: flex; flex-direction: column; gap: 5px;
         }
-        .rank-card .header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; }
-        
+
+        .card h2.name { font-size: 1.4rem; font-weight: 600; margin: 0; }
+        .vote-count { font-size: 1.1rem; font-weight: bold; color: var(--light-blue); }
+
         /* Gold styling for Winner */
         .rank-1 { 
             border-color: var(--indian-yellow); 
             box-shadow: 0 0 40px rgba(255, 215, 0, 0.2); 
-            transform: scale(1.02); 
             background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(10,17,40,0.8));
         }
-        .rank-1:hover {
-            transform: scale(1.02) translateY(-5px); 
-        }
-        .rank-1 h2.name { color: var(--indian-yellow); font-family: 'Cinzel', serif; font-size: 2rem; }
-        .rank-1 .vote-count { color: var(--indian-yellow); font-size: 2rem; }
-
-        .vote-count { font-size: 1.5rem; font-weight: bold; color: var(--light-blue); text-align: right; }
+        .rank-1 h2.name { color: var(--indian-yellow); font-family: 'Cinzel', serif; font-size: 1.8rem; }
+        .rank-1 .vote-count { color: var(--indian-yellow); }
 
         /* Progress Bar */
         .progress-track {
-            width: 100%; height: 12px; background: rgba(255,255,255,0.1);
+            width: 100%; height: 10px; background: rgba(255,255,255,0.1);
             border-radius: 10px; overflow: hidden; position: relative;
         }
         .progress-fill {
             height: 100%; border-radius: 10px;
             background: linear-gradient(90deg, var(--light-blue), #00d2ff);
             box-shadow: 0 0 15px rgba(0, 210, 255, 0.8);
-            transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); /* Smooth live update */
+            transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .rank-1 .progress-fill {
             background: linear-gradient(90deg, #F39C12, var(--indian-yellow));
             box-shadow: 0 0 20px var(--gold-glow);
         }
-
-        @keyframes fadeIn { 
-            0% { opacity: 0; transform: translateY(10px); } 
-            100% { opacity: 1; transform: translateY(0); } 
-        }
         
+        /* Interactive Upvote Buttons */
+        button { 
+            padding: 10px 25px; 
+            background: transparent; 
+            color: var(--indian-yellow); border: 2px solid var(--indian-yellow); border-radius: 30px; 
+            font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem; letter-spacing: 1px;
+            cursor: pointer; box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+            transition: all 0.3s; flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        button:hover:not(:disabled) { 
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); transform: scale(1.05); 
+            background: rgba(255, 215, 0, 0.1);
+        }
+        button:disabled { 
+            background: rgba(46, 204, 113, 0.2); color: var(--upvote-green);
+            cursor: not-allowed; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4); 
+            border: 2px solid var(--upvote-green);
+        }
+
         .hidden { display: none !important; }
 
         /* --- MOBILE RESPONSIVENESS --- */
-        @media (max-width: 768px) {
-            h1 { font-size: 2rem; letter-spacing: 2px; }
-            .header-container { padding: 30px 15px 15px; }
-        }
-
         @media (max-width: 600px) {
             h1 { font-size: 1.6rem; letter-spacing: 1px; }
-            
-            /* Voting Cards */
-            .card { flex-direction: column; gap: 15px; text-align: center; padding: 20px 15px; }
-            .card h2 { font-size: 1.3rem; }
-            button { width: 100%; padding: 14px 20px; font-size: 1.1rem; }
-            
-            /* Results Cards */
-            .rank-card .header-row { flex-direction: column; justify-content: center; text-align: center; }
-            .vote-count { text-align: center; font-size: 1.3rem; }
-            .rank-1 h2.name { font-size: 1.6rem; }
-            .rank-1 .vote-count { font-size: 1.6rem; }
-        }
-
-        @media (max-width: 400px) {
-            h1 { font-size: 1.3rem; }
-            .live-badge { font-size: 0.7rem; padding: 4px 12px; }
+            .header-row { flex-direction: column; text-align: center; gap: 15px; }
+            button { width: 100%; padding: 12px 20px; }
+            .rank-1 h2.name { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
-    <div class="sky-container">
-        <div class="stars-fine"></div>
-    </div>
-    
+    <div class="sky-container"><div class="stars-fine"></div></div>
     <div class="vignette"></div>
 
     <div class="header-container">
@@ -226,14 +188,12 @@
         <h1 id="mainTitle">Waiting for Host...</h1>
     </div>
     
-    <div id="pollContainer"></div>
-    <div id="resultsContainer" class="hidden results-wrapper"></div>
+    <div id="boardContainer" class="hidden"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // User's provided Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCut-Qi7scoHnjHyE8UBuN53PHWnMMKqSE",
             authDomain: "sitee-f6a0c.firebaseapp.com",
@@ -245,55 +205,43 @@
         const db = getDatabase(app);
 
         let candidatesData = [];
-        let hasVoted = localStorage.getItem('hasVoted') === 'true';
+        
+        // Changed to an object to track multiple votes: { "candidate1_id": true, "candidate2_id": true }
+        let upvotedCandidates = JSON.parse(localStorage.getItem('upvotedCandidates')) || {};
 
         const title = document.getElementById('mainTitle');
-        const pollContainer = document.getElementById('pollContainer');
-        const resultsContainer = document.getElementById('resultsContainer');
+        const boardContainer = document.getElementById('boardContainer');
         const badgeText = document.getElementById('badgeText');
         const liveBadge = document.getElementById('liveBadge');
 
         let isPollActive = false;
 
-        // 1. Listen for Candidates
+        // Listen for Candidate Data
         onValue(ref(db, 'candidates'), (snapshot) => {
             candidatesData = [];
             snapshot.forEach(child => {
                 candidatesData.push({ id: child.key, ...child.val() });
             });
             
-            if (!isPollActive) return;
-
-            // Route dynamically based on if they have voted yet
-            if (hasVoted) {
-                renderLiveResults();
-            } else {
-                renderVotingList();
+            if (isPollActive) {
+                renderUpvoteBoard();
             }
         });
 
-        // 2. Listen for Poll Status
+        // Listen for Poll Status
         onValue(ref(db, 'pollStatus'), (snapshot) => {
             const status = snapshot.val();
 
             if (status && status.active) {
                 isPollActive = true;
+                title.innerText = "LIVE UPVOTE BOARD";
+                badgeText.innerText = "VOTING OPEN";
+                liveBadge.style.color = "#ff4e50";
+                liveBadge.style.borderColor = "#ff4e50";
+                liveBadge.querySelector('.live-dot').style.background = "#ff4e50";
                 
-                if (hasVoted) {
-                    // Show live results immediately if already voted
-                    renderLiveResults();
-                } else {
-                    // Show voting UI
-                    title.innerText = "Global Audience Vote";
-                    badgeText.innerText = "LIVE VOTE";
-                    liveBadge.style.color = "#ff4e50";
-                    liveBadge.style.borderColor = "#ff4e50";
-                    liveBadge.querySelector('.live-dot').style.background = "#ff4e50";
-                    
-                    pollContainer.classList.remove('hidden');
-                    resultsContainer.classList.add('hidden');
-                    renderVotingList();
-                }
+                boardContainer.classList.remove('hidden');
+                renderUpvoteBoard();
             } else {
                 isPollActive = false; 
                 title.innerText = "Awaiting Admin Commands";
@@ -302,77 +250,66 @@
                 liveBadge.style.borderColor = "#F39C12";
                 liveBadge.querySelector('.live-dot').style.background = "#F39C12";
 
-                pollContainer.innerHTML = '';
-                resultsContainer.classList.add('hidden');
-                localStorage.removeItem('hasVoted'); 
-                hasVoted = false;
+                boardContainer.classList.add('hidden');
+                boardContainer.innerHTML = '';
+                
+                // Reset local storage when poll stops so they can vote again next time
+                localStorage.removeItem('upvotedCandidates'); 
+                upvotedCandidates = {};
             }
         });
 
-        function renderVotingList() {
-            pollContainer.innerHTML = '';
-            candidatesData.forEach((data, index) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.style.animation = `fadeIn 0.5s ease forwards ${index * 0.1}s`;
-                card.style.opacity = "0";
-
-                card.innerHTML = `<h2 class="name">${data.name}</h2>`;
-                
-                const btn = document.createElement('button');
-                btn.innerText = 'CAST VOTE';
-                
-                btn.onclick = () => {
-                    if (hasVoted) return;
-                    
-                    // 1. Lock vote locally immediately
-                    localStorage.setItem('hasVoted', 'true');
-                    hasVoted = true;
-
-                    // 2. Send vote to Firebase
-                    const voteRef = ref(db, `candidates/${data.id}/votes`);
-                    runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
-
-                    // 3. Trigger immediate result rendering
-                    renderLiveResults(); 
-                };
-
-                card.appendChild(btn);
-                pollContainer.appendChild(card);
-            });
-        }
-
-        function renderLiveResults() {
-            title.innerText = "LIVE RESULTS";
-            badgeText.innerText = "UPDATING LIVE";
-            liveBadge.style.color = "var(--indian-yellow)";
-            liveBadge.style.borderColor = "var(--indian-yellow)";
-            liveBadge.querySelector('.live-dot').style.background = "var(--indian-yellow)";
-            
-            pollContainer.classList.add('hidden');
-            resultsContainer.classList.remove('hidden');
-            resultsContainer.innerHTML = '';
+        function renderUpvoteBoard() {
+            boardContainer.innerHTML = '';
 
             const totalVotes = candidatesData.reduce((sum, current) => sum + (current.votes || 0), 0);
+            
+            // Sort by highest votes first
             const sorted = [...candidatesData].sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
             sorted.forEach((data, index) => {
                 const card = document.createElement('div');
-                card.className = `card rank-card ${index === 0 ? 'rank-1' : ''}`;
+                card.className = `card ${index === 0 ? 'rank-1' : ''}`;
                 
                 const percentage = totalVotes > 0 ? (((data.votes || 0) / totalVotes) * 100).toFixed(1) : 0;
+                
+                // Check if this specific candidate has been upvoted by the user
+                const isUpvoted = upvotedCandidates[data.id];
 
-                // Width is applied inline instantly so CSS transition handles the smooth live update
                 card.innerHTML = `
                     <div class="header-row">
-                        <h2 class="name">#${index + 1} ${data.name}</h2>
-                        <span class="vote-count">${data.votes || 0} Votes</span>
+                        <div class="info-col">
+                            <h2 class="name">#${index + 1} ${data.name}</h2>
+                            <span class="vote-count">${data.votes || 0} Upvotes</span>
+                        </div>
                     </div>
                     <div class="progress-track">
                         <div class="progress-fill" style="width: ${percentage}%"></div>
                     </div>
                 `;
-                resultsContainer.appendChild(card);
+
+                // Create the button dynamically so we can attach the event listener easily
+                const btn = document.createElement('button');
+                btn.innerText = isUpvoted ? '✓ UPVOTED' : '▲ UPVOTE';
+                btn.disabled = isUpvoted;
+                
+                btn.onclick = () => {
+                    if (upvotedCandidates[data.id]) return;
+                    
+                    // 1. Lock vote for THIS specific candidate locally
+                    upvotedCandidates[data.id] = true;
+                    localStorage.setItem('upvotedCandidates', JSON.stringify(upvotedCandidates));
+
+                    // 2. Send upvote to Firebase
+                    const voteRef = ref(db, `candidates/${data.id}/votes`);
+                    runTransaction(voteRef, (currentVotes) => (currentVotes || 0) + 1);
+
+                    // 3. UI will automatically update via the onValue Firebase listener!
+                };
+
+                // Append button to the header row
+                card.querySelector('.header-row').appendChild(btn);
+                boardContainer.appendChild(card);
             });
         }
     </script>
